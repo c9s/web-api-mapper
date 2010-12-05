@@ -1,0 +1,68 @@
+# NAME
+
+Web::API::Mapper - Web API Mapping Class
+
+# SYNOPSIS
+
+    my $m = Web::API::Mapper->new( base => 'foo', route => {
+                    post => [
+                        '/bar/(\d+)' => sub { my $args = shift;  return $1;  }
+                    ]
+                    get =>  [ 
+                        ....
+                    ]
+                });
+    my $ret = $m->post->dispatch( '/foo/bar' , { ... args ... } );
+    my $ret = $m->get->dispatch(  '/foo/bar' );
+    my $ret = $m->dispatch( '/foo/bar' , { args ... } );
+
+# TODO
+
+Provide classes for mounting service to frameworks.
+
+# DESCRIPTION
+
+[Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) is an API (Application Programming Interface) convergence class for mapping
+API to web frameworks.
+
+by using [Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) you can simply mount these api service like
+Twitter, and dispatch paths to these services.
+
+[Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) is using [Path::Dispatcher](http://search.cpan.org/perldoc?Path::Dispatcher) for dispatching.
+
+# ROUTE SPEC
+
+API Provider can provide a route hash reference for dispatching rules.
+
+- post => [ '/path/to/(\d+)' => sub {  } , ... ]
+
+- get => [  '/path/to/(\d+)' => sub {  } , ... ]
+
+- fallback => sub {    }
+
+# EXAMPLE
+
+    package Twitter::API;
+
+    sub route { {
+        post => [
+            'timeline/add/' => sub { my $args = shift;  .... },
+        ],
+        get => [
+            'timeline/get/(\w+)' => sub {  my $args = shift;  .... return $1 },
+        ],
+    } }
+
+    package main;
+
+    my $m = Web::API::Mapper->new( base => 'twitter', route => Twitter::API->route );
+    # $m->route( Plurk::API->route );
+    $m->dispatch(  '/path/to' , { args ... } );
+
+    1;
+
+
+
+# AUTHOR
+
+Cornelius & cornelius.howl at gmail.com ;
