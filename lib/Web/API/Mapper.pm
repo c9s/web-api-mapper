@@ -4,7 +4,6 @@ use strict;
 use Any::Moose;
 use Path::Dispatcher;
 
-our $VERSION = 0.01;
 
 has base => ( is => 'rw' );
 
@@ -76,6 +75,8 @@ package Web::API::Mapper;
 use warnings;
 use strict;
 use Any::Moose;
+
+our $VERSION = 0.01;
 
 # path base
 has base => ( is => 'rw' , isa => 'Str' , default => qq{} );
@@ -176,7 +177,6 @@ API Provider can provide a route hash reference for dispatching rules.
     package Twitter::API;
 
     sub route { {
-        base => 'twitter',
         post => [
             'timeline/add/' => sub { my $args = shift;  .... },
         ],
@@ -187,8 +187,9 @@ API Provider can provide a route hash reference for dispatching rules.
 
     package main;
 
-    my $m = Web::API::Mapper->new( route => Twitter::API->route );
-    $m->route( Plurk::API->route );
+    my $m = Web::API::Mapper->new( base => 'twitter', route => Twitter::API->route );
+    # $m->route( Plurk::API->route );
+    $m->dispatch(  '/path/to' , { args ... } );
 
     1;
 
