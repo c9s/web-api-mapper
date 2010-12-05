@@ -4,6 +4,8 @@ use strict;
 use Moose;
 use Path::Dispatcher;
 
+our $VERSION = 0.01;
+
 has disp => ( 
     is => 'rw' , 
     handles => [ qw(has_matches run) ],
