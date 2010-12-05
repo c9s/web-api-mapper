@@ -1,4 +1,5 @@
 .shipit
+ChangeLog
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AuthorTests.pm
@@ -20,4 +21,3 @@ MANIFEST			This list of files
 META.yml
 README.mkdn
 t/01-load.t
-ChangeLog
