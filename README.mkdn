@@ -4,10 +4,9 @@ Web::API::Mapper - Web API Mapping Class
 
 # SYNOPSIS
 
-    my $m = Web::API::Mapper->new( route => {
-                    base => 'foobase',
+    my $m = Web::API::Mapper->new( base => 'foo', route => {
                     post => [
-                        '/foo/bar/(\d+)' => sub { my $args = shift;  return $1;  }
+                        '/bar/(\d+)' => sub { my $args = shift;  return $1;  }
                     ]
                     get =>  [ 
                         ....
@@ -46,7 +45,7 @@ API Provider can provide a route hash reference for dispatching rules.
     package Twitter::API;
 
     sub route { {
-        base => 'twitter'
+        base => 'twitter',
         post => [
             'timeline/add/' => sub { my $args = shift;  .... },
         ],

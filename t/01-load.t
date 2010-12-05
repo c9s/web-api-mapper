@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-use Test::More tests => 10;
+use Test::More tests => 13;
 use lib 'lib';
 use warnings;
 use strict;
@@ -34,3 +34,7 @@ is( $ret , 'ok' );
 $ret = $m->get->dispatch(  '/foo/timeline/get/c9s' , { name => 'amy' } );
 ok( $ret );
 is( ref($ret) , 'HASH' );
+
+$ret = $m->dispatch( '/foo/timeline/add/', { name => 'john' } );
+ok( $ret );
+is( $ret , 'ok' );
