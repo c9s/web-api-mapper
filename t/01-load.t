@@ -1,12 +1,16 @@
 #!/usr/bin/env perl
 use Test::More tests => 13;
-use lib 'lib';
+
+BEGIN {
+    use lib 'lib';
+    use_ok('Web::API::Mapper');
+}
+
+
+use Web::API::Mapper;
 use warnings;
 use strict;
 
-BEGIN {
-    use_ok('Web::API::Mapper');
-}
 
 my $m = Web::API::Mapper->new( base => 'foo', route =>  {
     post => [
