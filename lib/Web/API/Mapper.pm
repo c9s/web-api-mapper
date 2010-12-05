@@ -4,7 +4,7 @@ use strict;
 use Any::Moose;
 use Web::API::Mapper::RuleSet;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 has route => ( is => 'rw' );
 
