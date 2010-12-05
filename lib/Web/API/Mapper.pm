@@ -1,7 +1,7 @@
 package Web::API::Mapper::RuleSet;
 use warnings;
 use strict;
-use Moose;
+use Any::Moose;
 use Path::Dispatcher;
 
 our $VERSION = 0.01;
@@ -70,7 +70,7 @@ sub dispatch {
 package Web::API::Mapper;
 use warnings;
 use strict;
-use Moose;
+use Any::Moose;
 
 # path base
 has base => ( is => 'rw' , isa => 'Str' , default => 'sr' );
