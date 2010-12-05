@@ -6,9 +6,10 @@ use Path::Dispatcher;
 
 our $VERSION = 0.01;
 
+has base => ( is => 'rw' );
+
 has disp => ( 
     is => 'rw' , 
-    handles => [ qw(has_matches run) ],
     default => sub { 
         return Path::Dispatcher->new;
     } );
@@ -20,7 +21,8 @@ has fallback => ( is => 'rw' , isa => 'CodeRef' , default => sub {  sub {  } } )
 around BUILDARGS => sub {
     my $orig = shift;
     my $class = shift;
-    if (ref $_[0] eq 'ARRAY') {
+    if ( ! ref $_[0] && ref $_[1] eq 'ARRAY') {
+        my $base = shift @_;
         my $handlers = shift @_;
         my @rules;
         while (my($path, $code) = splice @$handlers, 0, 2) {
@@ -28,7 +30,7 @@ around BUILDARGS => sub {
             $path = qr/^$path/ unless ref $path eq 'RegExp';
             push @rules, { path => $path, code => $code };
         }
-        $class->$orig( rules => \@rules, @_);
+        $class->$orig( base => $base , rules => \@rules, @_);
     } else {
         $class->$orig(@_);
     }
@@ -36,12 +38,13 @@ around BUILDARGS => sub {
 
 sub BUILD {
     my $self = shift;
-    $self->load();
     $self->{_hits} = 0;
+    $self->load();
 }
 
 sub route {
     my ($self,$rules) = @_;
+    die('Unimplemented');
     # XXX:
 }
 
@@ -52,7 +55,7 @@ sub load {
     for my $rule ( @$rules ) {
         $disp->add_rule(
             Path::Dispatcher::Rule::Regex->new( regex => $rule->{path}, block => $rule->{code},)
-        ) ;
+        );
     }
     return $self;
 }
@@ -60,8 +63,10 @@ sub load {
 sub dispatch {
     my ($self,$path,$args) = @_;
     # $self->{_hits}++;
-    $self->disp->dispatch( $path );
-    return $self->run( $args ) if $self->has_matches;
+    my $base = $self->base;
+    $path =~ s{^/$base/}{} if $base;
+    my $dispatch = $self->disp->dispatch( $path );
+    return $dispatch->run( $args ) if $dispatch->has_matches;
     return $self->fallback->( $args ) if $self->fallback;
     return;
 }
@@ -73,7 +78,7 @@ use strict;
 use Any::Moose;
 
 # path base
-has base => ( is => 'rw' , isa => 'Str' , default => 'sr' );
+has base => ( is => 'rw' , isa => 'Str' , default => qq{} );
 
 has route => ( is => 'rw' );
 
@@ -88,8 +93,8 @@ has fallback => ( is => 'rw' , isa => 'CodeRef' , default => sub {  sub {  } } )
 sub BUILD {
     my ( $self ) = @_;
     my $route = $self->route;
-    my $postdisp = Web::API::Mapper::RuleSet->new( $route->{post} );
-    my $getdisp  = Web::API::Mapper::RuleSet->new( $route->{get} );
+    my $postdisp = Web::API::Mapper::RuleSet->new( $self->base ,  $route->{post} );
+    my $getdisp  = Web::API::Mapper::RuleSet->new( $self->base , $route->{get} );
     $self->post( $postdisp );
     $self->get( $getdisp );
 }
@@ -100,12 +105,17 @@ sub route {
 }
 
 sub dispatch {
-    my ($self,$path,$args) = @_;
+    my ( $self, $path, $args ) = @_;
+
+    my $base = $self->base;
+    $path =~ s{^/$base/}{} if $base;
+
+
     my $ret;
     $ret = $self->post->dispatch( $path , $args );
     return $ret if $ret;
 
-    $ret = $self->get->dispatch( $path );
+    $ret = $self->get->dispatch( $path , $args );
     return $ret if $ret;
 
     return $self->fallback->( $args ) if $self->fallback;
@@ -121,10 +131,9 @@ Web::API::Mapper - Web API Mapping Class
 
 =head1 SYNOPSIS
 
-    my $m = Web::API::Mapper->new( route => {
-                    base => 'foobase',
+    my $m = Web::API::Mapper->new( base => 'foo', route => {
                     post => [
-                        '/foo/bar/(\d+)' => sub { my $args = shift;  return $1;  }
+                        '/bar/(\d+)' => sub { my $args = shift;  return $1;  }
                     ]
                     get =>  [ 
                         ....
@@ -167,7 +176,7 @@ API Provider can provide a route hash reference for dispatching rules.
     package Twitter::API;
 
     sub route { {
-        base => 'twitter'
+        base => 'twitter',
         post => [
             'timeline/add/' => sub { my $args = shift;  .... },
         ],
