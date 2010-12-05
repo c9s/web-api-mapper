@@ -6,39 +6,49 @@ use Web::API::Mapper::RuleSet;
 
 our $VERSION = '0.01';
 
-# path base
-has base => ( is => 'rw' , isa => 'Str' , default => qq{} );
-
 has route => ( is => 'rw' );
 
 # post dispatcher
-has post => ( is => 'rw' );
+has post => ( is => 'rw' , default => sub { return Web::API::Mapper::RuleSet->new; } );
 
 # get dispatcher
-has get => ( is => 'rw' );
+has get => ( is => 'rw' , default => sub { return Web::API::Mapper::RuleSet->new; } );
 
 has fallback => ( is => 'rw' , isa => 'CodeRef' , default => sub {  sub {  } } );
 
+around BUILDARGS => sub {
+    my $orig = shift;
+    my $class = shift;
+    if ( ! ref $_[0] && ref $_[1] eq 'HASH') {
+        my $base = shift @_;
+        my $route = shift @_;
+        $class->$orig( base => $base , route => $route , @_);
+    } else {
+        $class->$orig(@_);
+    }
+};
+
+
 sub BUILD {
-    my ( $self ) = @_;
-    my $route = $self->route;
-    my $postdisp = Web::API::Mapper::RuleSet->new( $self->base ,  $route->{post} );
-    my $getdisp  = Web::API::Mapper::RuleSet->new( $self->base , $route->{get} );
-    $self->post( $postdisp );
-    $self->get( $getdisp );
+    my ( $self , $args ) = @_;
+    my $route = $args->{route};
+    my $base  = $args->{base};
+    $self->post( Web::API::Mapper::RuleSet->new( $base ,  $route->{post} ) ) if $route->{post};
+    $self->get(Web::API::Mapper::RuleSet->new( $base , $route->{get} )) if $route->{get};
 }
 
-sub route {
-    my ($self,$route) = @_;
-
+sub mount {
+    my ($self,$base,$route) = @_;
+    $self->post->mount( $base => $route->{post} ) if $route->{post};
+    $self->get->mount( $base => $route->{get} ) if $route->{get};
+    return $self;
 }
 
 sub dispatch {
     my ( $self, $path, $args ) = @_;
 
-    my $base = $self->base;
-    $path =~ s{^/$base/}{} if $base;
-
+#     my $base = $self->base;
+#     $path =~ s{^/$base/}{} if $base;
 
     my $ret;
     $ret = $self->post->dispatch( $path , $args );
@@ -60,17 +70,20 @@ Web::API::Mapper - Web API Mapping Class
 
 =head1 SYNOPSIS
 
-    my $m = Web::API::Mapper->new( base => 'foo', route => {
+    my $m = Web::API::Mapper->new(  '/foo' => {
                     post => [
                         '/bar/(\d+)' => sub { my $args = shift;  return $1;  }
                     ]
                     get =>  [ 
                         ....
                     ]
-                });
+                })->mount( ... );
     my $ret = $m->post->dispatch( '/foo/bar' , { ... args ... } );
     my $ret = $m->get->dispatch(  '/foo/bar' );
     my $ret = $m->dispatch( '/foo/bar' , { args ... } );
+
+    $m->post->mount( '/foo' , [ '/subpath/to' => sub {  ....  } ]);
+    $m->mount( '/fb' => {  post => [  ... ] , get => [  ... ] }  )->mount( ... );
 
 =head1 TODO
 
@@ -78,7 +91,7 @@ Provide classes for mounting service to frameworks.
 
 =head1 DESCRIPTION
 
-L<Web::API::Mapper> is an API (Application Programming Interface) convergence class for mapping
+L<Web::API::Mapper> is an API (Application Programming Interface) convergence class for mapping/dispatching 
 API to web frameworks.
 
 by using L<Web::API::Mapper> you can simply mount these api service like
@@ -100,27 +113,50 @@ API Provider can provide a route hash reference for dispatching rules.
 
 =back
 
+=head1 ACCESSORS
+
+=head2 route
+
+=head2 post
+
+is a L<Web::API::Mapper::RuleSet> object.
+
+=head2 get
+
+is a L<Web::API::Mapper::RuleSet> object.
+
+=head2 fallback
+
+is a CodeRef, fallback handler.
+
+=head1 FUNCTIONS
+
+=head2 mount
+
+=head2 dispatch
+
 =head1 EXAMPLE
 
     package Twitter::API;
 
     sub route { {
         post => [
-            'timeline/add/' => sub { my $args = shift;  .... },
+            '/timeline/add/' => sub { my $args = shift;  .... },
         ],
         get => [
-            'timeline/get/(\w+)' => sub {  my $args = shift;  .... return $1 },
+            '/timeline/get/(\w+)' => sub {  my $args = shift;  .... return $1 },
         ],
     } }
 
     package main;
 
-    my $m = Web::API::Mapper->new( base => 'twitter', route => Twitter::API->route );
-    # $m->route( Plurk::API->route );
-    $m->dispatch(  '/path/to' , { args ... } );
+    # This will add rule path to /twitter/timeline/add/  ... etc
+    my $m = Web::API::Mapper->new( '/twitter' => Twitter::API->route );
+    $m->mount(  '/basepath' , {  post => [  ... ] } );
+    $m->post->mount( '/basepath' , [  ...  ]  );
+    $m->dispatch( '/path/to' , { args ... } );
 
     1;
-
 
 =head1 AUTHOR
 

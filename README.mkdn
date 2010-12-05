@@ -4,17 +4,20 @@ Web::API::Mapper - Web API Mapping Class
 
 # SYNOPSIS
 
-    my $m = Web::API::Mapper->new( base => 'foo', route => {
+    my $m = Web::API::Mapper->new(  '/foo' => {
                     post => [
                         '/bar/(\d+)' => sub { my $args = shift;  return $1;  }
                     ]
                     get =>  [ 
                         ....
                     ]
-                });
+                })->mount( ... );
     my $ret = $m->post->dispatch( '/foo/bar' , { ... args ... } );
     my $ret = $m->get->dispatch(  '/foo/bar' );
     my $ret = $m->dispatch( '/foo/bar' , { args ... } );
+
+    $m->post->mount( '/foo' , [ '/subpath/to' => sub {  ....  } ]);
+    $m->mount( '/fb' => {  post => [  ... ] , get => [  ... ] }  )->mount( ... );
 
 # TODO
 
@@ -22,7 +25,7 @@ Provide classes for mounting service to frameworks.
 
 # DESCRIPTION
 
-[Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) is an API (Application Programming Interface) convergence class for mapping
+[Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) is an API (Application Programming Interface) convergence class for mapping/dispatching 
 API to web frameworks.
 
 by using [Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) you can simply mount these api service like
@@ -40,28 +43,50 @@ API Provider can provide a route hash reference for dispatching rules.
 
 - fallback => sub {    }
 
+# ACCESSORS
+
+## route
+
+## post
+
+is a [Web::API::Mapper::RuleSet](http://search.cpan.org/perldoc?Web::API::Mapper::RuleSet) object.
+
+## get
+
+is a [Web::API::Mapper::RuleSet](http://search.cpan.org/perldoc?Web::API::Mapper::RuleSet) object.
+
+## fallback
+
+is a CodeRef, fallback handler.
+
+# FUNCTIONS
+
+## mount
+
+## dispatch
+
 # EXAMPLE
 
     package Twitter::API;
 
     sub route { {
         post => [
-            'timeline/add/' => sub { my $args = shift;  .... },
+            '/timeline/add/' => sub { my $args = shift;  .... },
         ],
         get => [
-            'timeline/get/(\w+)' => sub {  my $args = shift;  .... return $1 },
+            '/timeline/get/(\w+)' => sub {  my $args = shift;  .... return $1 },
         ],
     } }
 
     package main;
 
-    my $m = Web::API::Mapper->new( base => 'twitter', route => Twitter::API->route );
-    # $m->route( Plurk::API->route );
-    $m->dispatch(  '/path/to' , { args ... } );
+    # This will add rule path to /twitter/timeline/add/  ... etc
+    my $m = Web::API::Mapper->new( '/twitter' => Twitter::API->route );
+    $m->mount(  '/basepath' , {  post => [  ... ] } );
+    $m->post->mount( '/basepath' , [  ...  ]  );
+    $m->dispatch( '/path/to' , { args ... } );
 
     1;
-
-
 
 # AUTHOR
 
