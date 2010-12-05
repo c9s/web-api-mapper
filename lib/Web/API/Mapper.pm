@@ -121,7 +121,7 @@ Web::API::Mapper - Web API Mapping Class
 
 =head1 SYNOPSIS
 
-    my $m = API::Mapper->new( route => {
+    my $m = Web::API::Mapper->new( route => {
                     base => 'foobase',
                     post => [
                         '/foo/bar/(\d+)' => sub { my $args = shift;  return $1;  }
@@ -178,7 +178,7 @@ API Provider can provide a route hash reference for dispatching rules.
 
     package main;
 
-    my $m = API::Mapper->new( route => Twitter::API->route );
+    my $m = Web::API::Mapper->new( route => Twitter::API->route );
     $m->route( Plurk::API->route );
 
     1;
