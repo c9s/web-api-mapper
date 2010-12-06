@@ -71,14 +71,28 @@ API to web frameworks.
 
 =head1 SYNOPSIS
 
-    my $m = Web::API::Mapper->new(  '/foo' => {
-                    post => [
-                        '/bar/(\d+)' => sub { my $args = shift;  return $1;  }
-                    ]
-                    get =>  [ 
-                        ....
-                    ]
-                })->mount( ... );
+    package YourService;
+    use Any::Moose;
+
+    sub route { {
+        post => [
+            '/bar/(\d+)' => sub { my $args = shift;  return $1;  }
+        ]
+        get =>  [ 
+            ....
+        ]
+    } }
+
+    package main;
+
+    my $service = YourService->new;
+    my $serviceA = OtherService->new;
+    $service->connect( ... );
+
+    my $m = Web::API::Mapper->new
+            ->mount( '/foo' => $service->route )
+            ->mount( '/a' => $serviceA->route );
+
     my $ret = $m->post->dispatch( '/foo/bar' , { ... args ... } );
     my $ret = $m->get->dispatch(  '/foo/bar' );
     my $ret = $m->dispatch( '/foo/bar' , { args ... } );
