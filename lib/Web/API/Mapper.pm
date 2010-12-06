@@ -198,15 +198,6 @@ to these services.
 
 L<Web::API::Mapper> is using L<Path::Dispatcher> for dispatching.
 
-=head1 TODO
-
-=for 4 
-
-=item Provide service classes for mounting.
-
-=item Provide mounter for web frameworks.
-
-=back
 
 =head1 ROUTE SPEC
 
@@ -240,9 +231,9 @@ is a CodeRef, fallback handler.
 
 =head1 FUNCTIONS
 
-=head2 mount
+=head2 mount( String $base , HashRef $route )
 
-=head2 dispatch
+=head2 dispatch( String $path , HashRef $args )
 
 =head2 auto_route( Class|Object $api , HashRef $options  )
 
@@ -320,6 +311,16 @@ And one day you want another applciation in Mojo:
         return $self->render(  $m->dispatch( $1 , $self->params ) );
     };
     app->start;
+
+=head1 TODO
+
+=for 4 
+
+=item Provide service classes for mounting.
+
+=item Provide mounter for web frameworks.
+
+=back
 
 =head1 AUTHOR
 
