@@ -91,6 +91,28 @@ is a CodeRef, fallback handler.
 
 ## dispatch
 
+## auto_route( Class|Object $api , HashRef $options  )
+
+Auto generate API routing table for object|class.
+
+You can use `prefix` or `regexp` to filter methods.
+
+underscores will be translated to slash `/`. for example, foo_get_id will be /get/id.
+
+### Options
+
+- prefix => qq|prefix_|
+
+Get methods by prefix, and strip the prefix.
+
+- regexp => qr/.../
+
+Filter methods by a regular expression pattern.
+
+- type => post|get|any
+
+Handler type, can be `post`, `get` and `any`.
+
 # EXAMPLE
 
     package Twitter::API;
@@ -133,11 +155,14 @@ For example, if you are in Dancer:
 
     dance;
 
+And one day you want another applciation in Mojo:
 
-
-
-
-
+    use Mojolicious::Lite;
+    get '/api/*' => sub {
+        my $self = shift;
+        return $self->render(  $m->dispatch( $1 , $self->params ) );
+    };
+    app->start;
 
 # AUTHOR
 

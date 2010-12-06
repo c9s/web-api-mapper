@@ -21,3 +21,4 @@ MANIFEST			This list of files
 META.yml
 README.mkdn
 t/01-load.t
+t/auto-router.t
