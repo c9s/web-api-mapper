@@ -174,6 +174,27 @@ is a CodeRef, fallback handler.
 
     1;
 
+For example, if you are in Dancer:
+
+    #!/usr/bin/perl
+    use Dancer;
+    use JSON;
+
+    our $m = Web::API::Mapper->new
+        ->mount( '/twitter' => Twitter::API->route )
+        ->mount( '/basepath' , { post => [  ... ] } );
+
+    any '/api/*' => sub {
+        return encode_json( $m->dispatch( $1 , params ) );
+    };
+
+    # request for '/api/twitter/timeline/add' to run!
+
+    dance;
+
+
+
+
 =head1 AUTHOR
 
 Cornelius E< cornelius.howl at gmail.com >
