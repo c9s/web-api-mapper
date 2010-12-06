@@ -206,8 +206,14 @@ For example, if you are in Dancer:
 
     dance;
 
+And one day you want another applciation in Mojo:
 
-
+    use Mojolicious::Lite;
+    get '/api/*' => sub {
+        my $self = shift;
+        return $self->render(  $m->dispatch( $1 , $self->params ) );
+    };
+    app->start;
 
 =head1 AUTHOR
 
