@@ -103,11 +103,7 @@ to these services.
 
 [Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) is using [Path::Dispatcher](http://search.cpan.org/perldoc?Path::Dispatcher) for dispatching.
 
-# TODO
 
-- Provide service classes for mounting.
-
-- Provide mounter for web frameworks.
 
 # ROUTE SPEC
 
@@ -137,9 +133,9 @@ is a CodeRef, fallback handler.
 
 # FUNCTIONS
 
-## mount
+## mount( String $base , HashRef $route )
 
-## dispatch
+## dispatch( String $path , HashRef $args )
 
 ## auto_route( Class|Object $api , HashRef $options  )
 
@@ -213,6 +209,12 @@ And one day you want another applciation in Mojo:
         return $self->render(  $m->dispatch( $1 , $self->params ) );
     };
     app->start;
+
+# TODO
+
+- Provide service classes for mounting.
+
+- Provide mounter for web frameworks.
 
 # AUTHOR
 
