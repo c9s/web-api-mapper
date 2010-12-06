@@ -14,6 +14,8 @@ has post => ( is => 'rw' , default => sub { return Web::API::Mapper::RuleSet->ne
 # get dispatcher
 has get => ( is => 'rw' , default => sub { return Web::API::Mapper::RuleSet->new; } );
 
+has any => ( is => 'rw' , default => sub { return Web::API::Mapper::RuleSet->new; } );
+
 has fallback => ( is => 'rw' , isa => 'CodeRef' , default => sub {  sub {  } } );
 
 around BUILDARGS => sub {
@@ -35,13 +37,38 @@ sub BUILD {
     my $base  = $args->{base};
     $self->post( Web::API::Mapper::RuleSet->new( $base ,  $route->{post} ) ) if $route->{post};
     $self->get(Web::API::Mapper::RuleSet->new( $base , $route->{get} )) if $route->{get};
+    $self->any(Web::API::Mapper::RuleSet->new( $base , $route->{any} )) if $route->{any};
 }
 
 sub mount {
     my ($self,$base,$route) = @_;
-    $self->post->mount( $base => $route->{post} ) if $route->{post};
-    $self->get->mount( $base => $route->{get} ) if $route->{get};
+    for ( qw(post get any) ) {
+        $self->$_->mount( $base => $route->{$_} ) if $route->{$_};
+    }
     return $self;
+}
+
+sub auto_route {
+    my ($class,$caller_package,$options) = @_;
+    my $caller_class = ref $caller_package ? ref $caller_package : $caller_package;
+    $options ||= {};
+    my $routetype = $options->{type} || 'any';
+    my $routes = {
+        post => [],
+        get => [],
+        any => [],
+    };
+    no strict 'refs';
+    while( my ($funcname,$b) = each %{ $caller_class . '::' } ) {
+        next if $options->{prefix} && $funcname !~ /^@{[ $options->{prefix} ]}/;
+        next if $options->{regexp} && $funcname !~ $options->{regexp};
+        next if ! defined &$b;
+        my $path = $funcname;
+        $path =~ tr{_}{/};  # translate _ to /
+        $path =~ s/^@{[ $options->{prefix} ]}//g if $options->{prefix};  # strip prefix if prefix defined.
+        push @{ $routes->{ $routetype } }, $path , sub { return $b->( $caller_package , @_ ); };
+    }
+    return $routes;
 }
 
 sub dispatch {
@@ -51,6 +78,10 @@ sub dispatch {
 #     $path =~ s{^/$base/}{} if $base;
 
     my $ret;
+
+    $ret = $self->any->dispatch( $path , $args );
+    return $ret if $ret;
+
     $ret = $self->post->dispatch( $path , $args );
     return $ret if $ret;
 
@@ -163,6 +194,32 @@ is a CodeRef, fallback handler.
 =head2 mount
 
 =head2 dispatch
+
+=head2 auto_route( Class|Object $api , HashRef $options  )
+
+Auto generate API routing table for object|class.
+
+You can use C<prefix> or C<regexp> to filter methods.
+
+underscores will be translated to slash F</>. for example, foo_get_id will be /get/id.
+
+=head3 Options
+
+=for 4
+
+=item prefix => qq|prefix_|
+
+Get methods by prefix, and strip the prefix.
+
+=item regexp => qr/.../
+
+Filter methods by a regular expression pattern.
+
+=item type => post|get|any
+
+Handler type, can be C<post>, C<get> and C<any>.
+
+=back
 
 =head1 EXAMPLE
 
