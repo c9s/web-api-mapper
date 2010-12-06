@@ -1,6 +1,7 @@
 # NAME
 
-Web::API::Mapper - Web API Mapping Class
+Web::API::Mapper - [Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) is an API (Application Programming Interface) convergence class for mapping/dispatching 
+API to web frameworks.
 
 # SYNOPSIS
 
@@ -19,19 +20,30 @@ Web::API::Mapper - Web API Mapping Class
     $m->post->mount( '/foo' , [ '/subpath/to' => sub {  ....  } ]);
     $m->mount( '/fb' => {  post => [  ... ] , get => [  ... ] }  )->mount( ... );
 
-# TODO
 
-Provide classes for mounting service to frameworks.
 
 # DESCRIPTION
 
 [Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) is an API (Application Programming Interface) convergence class for mapping/dispatching 
 API to web frameworks.
 
-by using [Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) you can simply mount these api service like
-Twitter, and dispatch paths to these services.
+This module is for reducing class coupling of web services on web frameworks.
+
+Web frameworks are always changing, and one day you will need to migrate your code to 
+the latest web framework. If your code heavily depends on your framework,
+it's pretty hard to migrate and it takes time.
+
+by using [Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) you can simply seperate service application and framework.
+you can simply mount these api service like Twitter ... etc, and dispatch paths
+to these services.
 
 [Web::API::Mapper](http://search.cpan.org/perldoc?Web::API::Mapper) is using [Path::Dispatcher](http://search.cpan.org/perldoc?Path::Dispatcher) for dispatching.
+
+# TODO
+
+- Provide service classes for mounting.
+
+- Provide mounter for web frameworks.
 
 # ROUTE SPEC
 
@@ -72,6 +84,7 @@ is a CodeRef, fallback handler.
     sub route { {
         post => [
             '/timeline/add/' => sub { my $args = shift;  .... },
+            '/timeline/remove/' => sub { ... },
         ],
         get => [
             '/timeline/get/(\w+)' => sub {  my $args = shift;  .... return $1 },
@@ -91,3 +104,7 @@ is a CodeRef, fallback handler.
 # AUTHOR
 
 Cornelius & cornelius.howl at gmail.com ;
+
+# LICENSE
+
+Perl

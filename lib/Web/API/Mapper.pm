@@ -66,7 +66,8 @@ __END__
 
 =head1 NAME
 
-Web::API::Mapper - Web API Mapping Class
+Web::API::Mapper - L<Web::API::Mapper> is an API (Application Programming Interface) convergence class for mapping/dispatching 
+API to web frameworks.
 
 =head1 SYNOPSIS
 
@@ -85,19 +86,33 @@ Web::API::Mapper - Web API Mapping Class
     $m->post->mount( '/foo' , [ '/subpath/to' => sub {  ....  } ]);
     $m->mount( '/fb' => {  post => [  ... ] , get => [  ... ] }  )->mount( ... );
 
-=head1 TODO
-
-Provide classes for mounting service to frameworks.
 
 =head1 DESCRIPTION
 
 L<Web::API::Mapper> is an API (Application Programming Interface) convergence class for mapping/dispatching 
 API to web frameworks.
 
-by using L<Web::API::Mapper> you can simply mount these api service like
-Twitter, and dispatch paths to these services.
+This module is for reducing class coupling of web services on web frameworks.
+
+Web frameworks are always changing, and one day you will need to migrate your code to 
+the latest web framework. If your code heavily depends on your framework,
+it's pretty hard to migrate and it takes time.
+
+by using L<Web::API::Mapper> you can simply seperate service application and framework.
+you can simply mount these api service like Twitter ... etc, and dispatch paths
+to these services.
 
 L<Web::API::Mapper> is using L<Path::Dispatcher> for dispatching.
+
+=head1 TODO
+
+=for 4 
+
+=item Provide service classes for mounting.
+
+=item Provide mounter for web frameworks.
+
+=back
 
 =head1 ROUTE SPEC
 
@@ -142,6 +157,7 @@ is a CodeRef, fallback handler.
     sub route { {
         post => [
             '/timeline/add/' => sub { my $args = shift;  .... },
+            '/timeline/remove/' => sub { ... },
         ],
         get => [
             '/timeline/get/(\w+)' => sub {  my $args = shift;  .... return $1 },
@@ -162,5 +178,8 @@ is a CodeRef, fallback handler.
 
 Cornelius E< cornelius.howl at gmail.com >
 
-=cut
+=head1 LICENSE
 
+Perl
+
+=cut
