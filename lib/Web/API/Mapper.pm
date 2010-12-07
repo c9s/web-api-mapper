@@ -58,14 +58,33 @@ sub auto_route {
         get => [],
         any => [],
     };
+
+    my $filter = $options->{filter};
+    my $prefix = $options->{prefix};
     no strict 'refs';
     while( my ($funcname,$b) = each %{ $caller_class . '::' } ) {
-        next if $options->{prefix} && $funcname !~ /^@{[ $options->{prefix} ]}/;
-        next if $options->{regexp} && $funcname !~ $options->{regexp};
-        next if ! defined &$b;
+        next if $prefix && $funcname !~ /^$prefix/;
+
+        if ( $filter ) {
+            next if ref $filter eq 'RegExp' && $funcname !~ $filter;
+            if( ref $filter eq 'CODE' ) {
+                local $_ = $funcname;
+                next if ! $filter->( );
+            }
+        }
+
+        next if ! defined &$b;  # keep defined coderef only.
+
         my $path = $funcname;
-        $path =~ tr{_}{/};  # translate _ to /
-        $path =~ s/^@{[ $options->{prefix} ]}//g if $options->{prefix};  # strip prefix if prefix defined.
+        $path =~ s/^$prefix//g if $prefix;  # strip prefix if prefix defined.
+
+        if( $options->{map} ) {
+            local $_ = $path;
+            $path = $options->{map}->( );
+        } else {
+            # default behavior
+            $path =~ tr{_}{/};  # translate _ to /
+        }
         push @{ $routes->{ $routetype } }, $path , sub { return $b->( $caller_package , @_ ); };
     }
     return $routes;
@@ -133,8 +152,7 @@ API to web frameworks.
 
 To generate API routing table automatically, see test file F<t/auto-router.t>:
 
-
-#!/usr/bin/env perl
+    #!/usr/bin/env perl
     use Test::More tests => 6;
     use Web::API::Mapper;
 
@@ -235,7 +253,7 @@ is a CodeRef, fallback handler.
 
 =head2 dispatch( String $path , HashRef $args )
 
-=head2 auto_route( Class|Object $api , HashRef $options  )
+=head2 auto_route( Class|Object $Api , HashRef $Options  )
 
 Auto generate API routing table for object|class.
 
@@ -243,17 +261,52 @@ You can use C<prefix> or C<regexp> to filter methods.
 
 underscores will be translated to slash F</>. for example, foo_get_id will be /get/id.
 
-=head3 Options
+=head3 $Api
+
+Class name or an object reference.
+
+=head3 $Options
 
 =for 4
 
 =item prefix => qq|prefix_|
 
-Get methods by prefix, and strip the prefix.
+Get methods by prefix, and strip the prefix. if 'foo_' is given, then
+the all methods start with "foo_" will be in API routing table.
 
-=item regexp => qr/.../
+It's the same as the options below:
 
-Filter methods by a regular expression pattern.
+        filter => qr/^prefix_/,
+        map => {  s/^prefix_// }
+
+=item filter => RegExp | CodeRef
+
+Filter methods by a pattern or a closure.
+
+By a pattern:
+
+        filter => qr/^foo_/,
+
+By a closure:
+
+        filter => sub { /foo/ && /bar/ },
+
+=item map  => CodeRef
+
+Closure for translating method name to path.
+
+Once you defined map option, then you need to translate underscore "_"
+to "/" by yourself.
+
+        map => sub { s{_+}{/}g }
+
+You can also translate the path name with ".". for example:
+
+        map => sub { s/_+/./g }
+
+More clearly,
+
+        map => sub { 'new/prefix/' . $_ }
 
 =item type => post|get|any
 
