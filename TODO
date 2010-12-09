@@ -1,0 +1,27 @@
+
+
+To generate javascript api for clients:
+
+    print $m->generate_js( prefix => 'Twitter' );
+
+Then the output:
+
+    TwitterAPI = { };
+    TwitterAPI.__request = function(path,type,args,cb) {
+        $.ajax({
+            url: path,
+            type: 'post',
+            dataType: 'json',
+            data: args,
+            success: function(json) { 
+                if( cb ) 
+                    cb(json);
+            }
+        });
+    };
+
+    TwitterAPI.get_user = function(args,cb) { 
+
+        this.__request('/twitter/get_user','post',args,cb);
+    };
+
